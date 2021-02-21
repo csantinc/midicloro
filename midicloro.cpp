@@ -26,7 +26,9 @@
 #include <boost/program_options.hpp>
 #include <boost/regex.hpp>
 #include <boost/random.hpp>
+//#include <boost/json.hpp>
 #include "rtmidi/RtMidi.h"
+#include <curl/curl.h>
 
 using namespace std;
 
@@ -215,17 +217,37 @@ int main(int argc, char *argv[]) {
     midiin3 = new RtMidiIn();
     midiin4 = new RtMidiIn();
     midiout1 = new RtMidiOut();
-	midiout2 = new RtMidiOut();
-	midiout3 = new RtMidiOut();
-	midiout4 = new RtMidiOut();
-
+	  midiout2 = new RtMidiOut();
+	  midiout3 = new RtMidiOut();
+	  midiout4 = new RtMidiOut();
+#if FALSE
     // Assign MIDI ports
     if (!openPorts(input1, input2, input3, input4, output, output2, output3, output4)) {
       cout << "Exiting" << endl;
       cleanUp();
       exit(0);
     }
-
+#else
+  CURL *curl;
+  CURLcode res;
+ 
+  curl = curl_easy_init();
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3333/about");
+    /* example.com is redirected, so we tell libcurl to follow redirection */ 
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+ 
+    /* Perform the request, res will get the return code */ 
+    res = curl_easy_perform(curl);
+    /* Check for errors */ 
+    if(res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+ 
+    /* always cleanup */ 
+    curl_easy_cleanup(curl);
+  }
+#endif
     // Note off message
     vector<unsigned char> offMsg;
     offMsg.push_back(BOOST_BINARY(10000000));
